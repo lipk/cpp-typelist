@@ -51,7 +51,7 @@ Wrap each element with `type_list_item`, which contains a `type` and the matchin
 
 Create a new list from the elements with the given indices. Example:
 
-```
+```cpp
 using a = type_list<T0, T1, T2, T3, T4>;
 using b = a::keep<0, 2, 3>;
 static_assert(std::is_same<b, type_list<T0, T2, T3>>::value, "");
