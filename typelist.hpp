@@ -111,7 +111,7 @@ struct type_list
     using wrap = type_list<W<TS>...>;
 
     template<template<typename> class M>
-    using map = type_list<typename M<TS>::result...>;
+    using map = type_list<typename M<TS>::type...>;
 
     template<typename T>
     using append = type_list<TS..., T>;
