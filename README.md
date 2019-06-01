@@ -78,7 +78,7 @@ a::for_each([&](auto t) {
 Ultimately, passing around a list of types is not good for much. Sooner or later, you'll want to
 convert it to some instatiable type. This is what `to` is for:
 
-```
+```cpp
 template <class ...T> struct A {};
 using l = type_list<T1, T2, T3, T4>;
 type_list::to<A> a;
