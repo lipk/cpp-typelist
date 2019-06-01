@@ -3,60 +3,141 @@
 #include <cstdint>
 #include <tuple>
 
-namespace typelist {
+namespace tl {
 
-template <typename Type_, uint64_t index_>
-struct TypeListItem
+// forward
+template<typename... TS>
+struct type_list;
+
+// type_list_item
+template<typename Type, uint64_t index_>
+struct type_list_item
 {
-    using Type = Type_;
+    using type = Type;
     static constexpr const uint64_t index = index_;
 };
 
-template <typename Func, uint64_t index, typename T, typename ...TS>
-void forEachImpl(const Func& func) {
-    func(TypeListItem<T, index>());
-    forEachImpl<Func, index+1, TS...>(func);
+// for_each
+template<typename Func, uint64_t index, typename T, typename... TS>
+void _for_each_impl(const Func& func)
+{
+    func(type_list_item<T, index>());
+    _for_each_impl<Func, index + 1, TS...>(func);
 }
 
-template <typename Func, uint64_t index>
-void forEachImpl(const Func&) {}
+template<typename Func, uint64_t index>
+void _for_each_impl(const Func&)
+{}
 
-template <uint64_t index, typename T, typename ...TS>
-struct GetNthType;
+// get
+template<uint64_t index, typename T, typename... TS>
+struct _get_nth_type_inner;
 
-template <typename T, typename ...TS>
-struct GetNthType<0, T, TS...>
+template<typename T, typename... TS>
+struct _get_nth_type_inner<0, T, TS...>
 {
-    using Type = T;
+    using type = T;
 };
 
-template <uint64_t index, typename T, typename ...TS>
-struct GetNthType
+template<uint64_t index, typename T, typename... TS>
+struct _get_nth_type_inner
 {
-    using Type = typename GetNthType<index-1, TS...>::Type;
+    using type = typename _get_nth_type_inner<index - 1, TS...>::type;
 };
 
-template <typename ...TS>
-struct TypeList
+template<uint64_t index, typename... TS>
+struct _get_nth_type
 {
-    template<template <typename> class W>
-    using Wrap = TypeList<W<TS>...>;
+    using type = typename _get_nth_type_inner<index, TS...>::type;
+};
 
-    template<template <typename> class M>
-    using Map = TypeList<typename M<TS>::Result...>;
+template<uint64_t index>
+struct _get_nth_type<index>
+{};
 
-    template<template <typename ...> class U>
-    using To = U<TS...>;
+// enumerate
+template<uint64_t index, typename T, typename... TS>
+struct _enumerate_impl_inner;
 
+template<uint64_t index, typename... TS>
+struct _enumerate_impl
+{
+    using type = typename _enumerate_impl_inner<index, TS...>::type;
+};
+
+template<uint64_t index>
+struct _enumerate_impl<index>
+{
+    using type = type_list<>;
+};
+
+template<uint64_t index, typename T, typename... TS>
+struct _enumerate_impl_inner
+{
+    using type =
+        typename _enumerate_impl<index + 1, TS...>::type::template append<
+            type_list_item<T, index>>;
+};
+
+// keep
+template<typename L, uint64_t i, uint64_t... indices>
+struct _keep_impl_inner;
+
+template<typename L, uint64_t... indices>
+struct _keep_impl
+{
+    using type = typename _keep_impl_inner<L, indices...>::type;
+};
+
+template<typename L>
+struct _keep_impl<L>
+{
+    using type = type_list<>;
+};
+
+template<typename L, uint64_t i, uint64_t... indices>
+struct _keep_impl_inner
+{
+    using _tail_type = typename _keep_impl<L, indices...>::type;
+    using _ith_type = typename L::template get<i>;
+    using type = typename _tail_type::template prepend<_ith_type>;
+};
+
+template<typename... TS>
+struct type_list
+{
+    // Compile time operations
+    template<template<typename> class W>
+    using wrap = type_list<W<TS>...>;
+
+    template<template<typename> class M>
+    using map = type_list<typename M<TS>::result...>;
+
+    template<typename T>
+    using append = type_list<TS..., T>;
+
+    template<typename T>
+    using prepend = type_list<T, TS...>;
+
+    template<uint64_t index>
+    using get = typename _get_nth_type<index, TS...>::type;
+
+    using enumerate = typename _enumerate_impl<0, TS...>::type;
+
+    template<uint64_t... indices>
+    using keep = typename _keep_impl<type_list<TS...>, indices...>::type;
+
+    // Runtime operations
     template<typename Func>
-    static void forEach(const Func& func) {
-        forEachImpl<Func, 0, TS...>(func);
+    static void for_each(const Func& func)
+    {
+        _for_each_impl<Func, 0, TS...>(func);
     }
 
-    template<uint32_t index>
-    using Get = typename GetNthType<index, TS...>::Type;
+    // Conversion
+    template<template<typename...> class U>
+    using to = U<TS...>;
 
-    using ToTuple = To<std::tuple>;
+    using to_tuple = to<std::tuple>;
 };
-
 }
