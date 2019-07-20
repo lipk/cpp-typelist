@@ -38,4 +38,10 @@ int main()
     S_CHECK_EQ(T3::append<bool>, _(type_list<int, double, float, bool>));
     S_CHECK_EQ(T0::prepend<bool>, _(type_list<bool>));
     S_CHECK_EQ(T0::append<bool>, _(type_list<bool>));
+
+    auto tup = T3::for_each_and_collect<std::tuple>([](auto t) {
+        using T = typename decltype(t)::type;
+        return new T[10];
+    });
+    S_CHECK_EQ(decltype(tup), _(std::tuple<int*, double*, float*>));
 }

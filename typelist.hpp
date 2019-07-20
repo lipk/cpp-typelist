@@ -29,6 +29,18 @@ template<typename Func, uint64_t index>
 void _for_each_impl(const Func&)
 {}
 
+// instantiate
+template<typename Func, uint64_t index, typename T, typename... TS>
+void _instantiate_impl(const Func& func)
+{
+    func(type_list_item<T, index>());
+    _for_each_impl<Func, index + 1, TS...>(func);
+}
+
+template<typename Func, uint64_t index>
+void _instantiate_impl(const Func&)
+{}
+
 // get
 template<uint64_t index, typename T, typename... TS>
 struct _get_nth_type_inner;
@@ -75,7 +87,7 @@ template<uint64_t index, typename T, typename... TS>
 struct _enumerate_impl_inner
 {
     using type =
-        typename _enumerate_impl<index + 1, TS...>::type::template append<
+        typename _enumerate_impl<index + 1, TS...>::type::template prepend<
             type_list_item<T, index>>;
 };
 
@@ -132,6 +144,19 @@ struct type_list
     static void for_each(const Func& func)
     {
         _for_each_impl<Func, 0, TS...>(func);
+    }
+
+    template<template<typename...> class U, typename Func>
+    static auto _for_each_and_collect_helper(const Func& func)
+        -> U<decltype(func(TS()))...>
+    {
+        return U<decltype(func(TS()))...>(func(TS())...);
+    }
+
+    template<template<typename...> class U, typename Func>
+    static auto for_each_and_collect(const Func& func)
+    {
+        return enumerate::template _for_each_and_collect_helper<U, Func>(func);
     }
 
     // Conversion
