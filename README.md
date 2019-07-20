@@ -2,7 +2,7 @@
 
 `type_list` is a single-file, header-only library for managing variadic type lists in C++. The CMake
 script is only for compiling the tests, to use the library, just grab typelist.hpp and place it
-somewhere your compiler can find it. Requires C++11.
+somewhere your compiler can find it. Requires C++14.
 
 # Features
 
@@ -60,7 +60,7 @@ static_assert(std::is_same<b, type_list<T0, T2, T3>>::value, "");
 Note: in addition to filtering the list, `keep` can also be used to reorder or duplicate elements,
 by supplying the appropriate indices multiple times and in different order.
 
-## for_each
+## for_each/for_each_and_collect
 
 Invoke a callable on each element. Elements are passed as `type_list_item` instances. Example: print
 the size of each element in the list.
@@ -71,6 +71,18 @@ a::for_each([&](auto t) {
     using T = decltype(t);
     std::cout << T::index << ' ' << sizeof(T::type) << std::endl;
 });
+```
+
+`for_each_and_collect` does the same thing as `for_each`, but it also collects the result of each
+function call into a container of your choice.
+
+```cpp
+using a = type_list<T0, T1, T2>;
+auto tup = a::for_each_and_collect<std::tuple>([&](auto t) {
+    using T = typename decltype(t)::type;
+    return new T[100];
+});
+static_assert(std::is_same<decltype(tup), std::tuple<T0*, T1*, T2*>>::value, "");
 ```
 
 ## to/to_tuple
