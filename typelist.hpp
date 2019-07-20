@@ -17,30 +17,6 @@ struct type_list_item
     static constexpr const uint64_t index = index_;
 };
 
-// for_each
-template<typename Func, uint64_t index, typename T, typename... TS>
-void _for_each_impl(const Func& func)
-{
-    func(type_list_item<T, index>());
-    _for_each_impl<Func, index + 1, TS...>(func);
-}
-
-template<typename Func, uint64_t index>
-void _for_each_impl(const Func&)
-{}
-
-// instantiate
-template<typename Func, uint64_t index, typename T, typename... TS>
-void _instantiate_impl(const Func& func)
-{
-    func(type_list_item<T, index>());
-    _for_each_impl<Func, index + 1, TS...>(func);
-}
-
-template<typename Func, uint64_t index>
-void _instantiate_impl(const Func&)
-{}
-
 // get
 template<uint64_t index, typename T, typename... TS>
 struct _get_nth_type_inner;
@@ -141,9 +117,20 @@ struct type_list
 
     // Runtime operations
     template<typename Func>
+    static void _for_each_helper(const Func& func)
+    {
+        // FIXME: so ugly :(
+        auto wrapper = [&](auto t) {
+            func(t);
+            return 1;
+        };
+        std::make_tuple(wrapper(TS())...);
+    }
+
+    template<typename Func>
     static void for_each(const Func& func)
     {
-        _for_each_impl<Func, 0, TS...>(func);
+        enumerate::template _for_each_helper<Func>(func);
     }
 
     template<template<typename...> class U, typename Func>
