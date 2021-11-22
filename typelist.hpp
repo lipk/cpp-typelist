@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <tuple>
 
 namespace tl {
@@ -126,6 +127,14 @@ struct type_list
     static bool for_each_until_true(const Func& func)
     {
         return (func(TS()) || ...);
+    }
+
+    template<typename T, typename Func>
+    static std::optional<T> for_each_until_no_optional(const Func& func)
+    {
+        std::optional<T> ret(std::nullopt);
+        (((ret = func(TS())) && ret.has_value()) || ...);
+        return ret;
     }
 
     template<typename Func>
