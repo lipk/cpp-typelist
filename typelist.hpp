@@ -117,20 +117,9 @@ struct type_list
 
     // Runtime operations
     template<typename Func>
-    static void _for_each_helper(const Func& func)
-    {
-        // FIXME: so ugly :(
-        auto wrapper = [&](auto t) {
-            func(t);
-            return 1;
-        };
-        std::make_tuple(wrapper(TS())...);
-    }
-
-    template<typename Func>
     static void for_each(const Func& func)
     {
-        enumerate::template _for_each_helper<Func>(func);
+        (func(TS()), ...);
     }
 
     template<template<typename...> class U, typename Func>
