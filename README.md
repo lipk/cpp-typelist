@@ -2,7 +2,11 @@
 
 `type_list` is a single-file, header-only library for managing variadic type lists in C++. The CMake
 script is only for compiling the tests, to use the library, just grab typelist.hpp and place it
-somewhere your compiler can find it. Requires C++14.
+somewhere your compiler can find it. Requires C++17.
+
+## Credits
+This repository got forked from https://github.com/lipk/cpp-typelist
+Thanks for your work!
 
 # Features
 
@@ -84,6 +88,10 @@ auto tup = a::for_each_and_collect<std::tuple>([&](auto t) {
 });
 static_assert(std::is_same<decltype(tup), std::tuple<T0*, T1*, T2*>>::value, "");
 ```
+
+`for_each_until_(true|false|no_optional)` does the same thing as `for_each`
+except of breaking the loop on a specific condition / return value. Requires the function to
+return either bool (for `_true|_false`) or optional.
 
 ## to/to_tuple
 
