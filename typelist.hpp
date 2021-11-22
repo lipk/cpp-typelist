@@ -122,6 +122,18 @@ struct type_list
         (func(TS()), ...);
     }
 
+    template<typename Func>
+    static bool for_each_until_true(const Func& func)
+    {
+        return (func(TS()) || ...);
+    }
+
+    template<typename Func>
+    static bool for_each_until_false(const Func& func)
+    {
+        return (func(TS()) && ...);
+    }
+
     template<template<typename...> class U, typename Func>
     static auto _for_each_and_collect_helper(const Func& func)
         -> U<decltype(func(TS()))...>
