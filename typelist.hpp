@@ -92,6 +92,56 @@ struct _keep_impl_inner
     using type = typename _tail_type::template prepend<_ith_type>;
 };
 
+template<typename Wanted, typename T>
+struct _index_of_impl;
+
+// Specialization: end of recursive if match in typelist with one list item.
+template<typename Wanted>
+struct _index_of_impl<Wanted, type_list<Wanted>>
+{
+    enum
+    {
+        value = 0
+    };
+};
+
+// Specialization: end of recursive if no match in typelist with one list item.
+template<typename Wanted, typename T>
+struct _index_of_impl<Wanted, type_list<T>>
+{
+    enum
+    {
+        value = -1
+    };
+};
+
+// Specialization: end of recursion on match.
+template<typename Wanted, typename... Tail>
+struct _index_of_impl<Wanted, type_list<Wanted, Tail...>>
+{
+    enum
+    {
+        value = 0
+    };
+};
+
+// Specialization: General handling.
+template<typename Wanted, typename Head, typename... Tail>
+struct _index_of_impl<Wanted, type_list<Head, Tail...>>
+{
+private:
+    enum
+    {
+        temp = _index_of_impl<Wanted, type_list<Tail...>>::value
+    };
+
+public:
+    enum
+    {
+        value = temp == -1 ? -1 : 1 + temp
+    };
+};
+
 template<typename... TS>
 struct type_list
 {
@@ -111,10 +161,21 @@ struct type_list
     template<uint64_t index>
     using get = typename _get_nth_type<index, TS...>::type;
 
+    template<typename T>
+    static constexpr uint64_t index_of()
+    {
+        return _index_of_impl<T, type_list<TS...>>::value;
+    }
+
     using enumerate = typename _enumerate_impl<0, TS...>::type;
 
     template<uint64_t... indices>
     using keep = typename _keep_impl<type_list<TS...>, indices...>::type;
+
+    enum
+    {
+        length = sizeof...(TS)
+    };
 
     // Runtime operations
     template<typename Func>
